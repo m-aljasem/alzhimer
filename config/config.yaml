@@ -1,0 +1,31 @@
+# Configuration file for alzhimer
+
+# Data settings
+data:
+  path: "./data"
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  batch_size: 32
+  image_size: [256, 256]
+
+# Model settings
+model:
+  architecture: "Multiple ML Models"
+  input_shape: [256, 256, 3]
+  num_classes: 2
+  learning_rate: 0.001
+  dropout: 0.5
+
+# Training settings
+training:
+  epochs: 50
+  early_stopping_patience: 10
+  reduce_lr_patience: 5
+  save_best_only: true
+
+# Paths
+paths:
+  models: "./models"
+  logs: "./logs"
+  experiments: "./experiments"
