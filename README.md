@@ -234,7 +234,7 @@ neurocare-ai/
 
 ## 📊 Model Performance
 
-Based on the original notebook analysis, typical performance metrics:
+Typical performance metrics:
 
 | Model | Accuracy | Recall | AUC |
 |-------|----------|--------|-----|
@@ -251,7 +251,7 @@ Based on the original notebook analysis, typical performance metrics:
 This project uses the **OASIS Longitudinal MRI Dataset**:
 
 - **Source**: [OASIS Brains](http://www.oasis-brains.org)
-- **Kaggle**: [MRI and Alzheimer's Dataset](https://www.kaggle.com/jboysen/mri-and-alzheimers)
+- **Dataset**: [MRI and Alzheimer's Dataset](https://www.kaggle.com/jboysen/mri-and-alzheimers)
 - **Size**: 150 subjects, longitudinal data
 - **Features**: 8 MRI biomarkers and patient characteristics
 
@@ -332,17 +332,16 @@ This software is provided for **research and educational purposes only**. It is 
 
 2. OASIS Dataset: [www.oasis-brains.org](http://www.oasis-brains.org)
 
-3. Original Kaggle Notebook: [Detecting Early Alzheimer's](https://www.kaggle.com/code)
-
 ## 👥 Authors
 
-- Original Notebook: Hyunseok Choi, Kyuri Song, Saurin Parikh
-- Refactored Package: AI Projects Team
+- **Mohamad AlJasem** (MD, MPH, MSc)
+  - Email: mohamad@aljasem.eu.org
+  - GitHub: [@m-aljasem](https://github.com/m-aljasem)
+  - Website: [aljasem.eu.org](https://aljasem.eu.org)
 
 ## 🙏 Acknowledgments
 
 - OASIS project for providing the dataset
-- Kaggle community for inspiration and code snippets
 - Scikit-learn team for excellent ML tools
 
 ---
