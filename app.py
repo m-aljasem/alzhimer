@@ -23,7 +23,7 @@ from src.models import ModelTrainer
 
 # Page configuration
 st.set_page_config(
-    page_title="NeuroCare AI"s Disease Detection",
+    page_title="NeuroCare AI - Alzheimer's Disease Detection",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
