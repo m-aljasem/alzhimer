@@ -300,95 +300,419 @@ python -c "from src.models import ModelTrainer; print('ModelTrainer OK')"
 ```
 
 
+
+
 ## 🌐 RESTful API
 
-The project includes a FastAPI server for programmatic access to the model.
+The project includes a FastAPI server for programmatic access to the model. This allows you to integrate predictions into your own applications, web services, or scripts.
+
+### Installation
+
+Make sure you have installed all dependencies:
+
+```bash
+pip install -r requirements.txt
+```
 
 ### Starting the API Server
 
+Start the API server using one of these methods:
+
+**Method 1: Direct Python execution**
 ```bash
 python api.py
-# or
+```
+
+**Method 2: Using uvicorn directly**
+```bash
 uvicorn api:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Method 3: Production mode (no auto-reload)**
+```bash
+uvicorn api:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 The API will be available at `http://localhost:8000`
 
 ### API Endpoints
 
-- `GET /` - Root endpoint with API information
-- `GET /health` - Health check endpoint
-- `GET /model/info` - Get model information
-- `POST /predict` - Make a prediction
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Root endpoint with API information |
+| `/health` | GET | Health check endpoint (checks if model is loaded) |
+| `/model/info` | GET | Get detailed model information |
+| `/predict` | POST | Make a prediction |
 
-### API Documentation
+### Interactive API Documentation
 
-Once the server is running, visit:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+Once the server is running, you can access interactive documentation:
 
-### Example Usage
+- **Swagger UI**: `http://localhost:8000/docs` - Interactive API explorer with "Try it out" feature
+- **ReDoc**: `http://localhost:8000/redoc` - Beautiful, responsive API documentation
+
+### Using the API
+
+#### Health Check
 
 ```python
 import requests
 
-# Health check
 response = requests.get("http://localhost:8000/health")
 print(response.json())
+# Output: {"status": "healthy", "model_loaded": true}
+```
 
-# Make prediction (example for image-based models)
-with open("test_image.jpg", "rb") as f:
-    files = {"file": f}
-    response = requests.post("http://localhost:8000/predict", files=files)
-    print(response.json())
+#### Get Model Information
+
+```python
+import requests
+
+response = requests.get("http://localhost:8000/model/info")
+print(response.json())
+# Output: Model type, input shape, classes, etc.
+```
+
+#### Make Predictions
+
+# Example: Alzheimer's Disease Prediction
+import requests
+
+# Prepare patient data
+patient_data = {
+    "gender": 1.0,      # 1 for Male, 0 for Female
+    "age": 75.0,
+    "education": 14.0,
+    "ses": 2.0,
+    "mmse": 27.0,
+    "etiv": 1490.0,
+    "nwbv": 0.73,
+    "asf": 1.20
+}
+
+# Make prediction
+response = requests.post("http://localhost:8000/predict", json=patient_data)
+result = response.json()
+
+print(f"Prediction: {result['prediction']}")
+print(f"Confidence: {result['confidence']:.2%}")
+print(f"Probabilities: {result['probabilities']}")
+
+### Using cURL
+
+You can also use cURL to interact with the API:
+
+**Health Check:**
+```bash
+curl http://localhost:8000/health
+```
+
+**Get Model Info:**
+```bash
+curl http://localhost:8000/model/info
+```
+
+**Make Prediction (for image-based models):**
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -F "file=@your_image.jpg"
+```
+
+**Make Prediction (for JSON-based models like Alzheimer's):**
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{"gender": 1.0, "age": 75.0, "education": 14.0, "ses": 2.0, "mmse": 27.0, "etiv": 1490.0, "nwbv": 0.73, "asf": 1.20}'
+```
+
+### Error Handling
+
+The API returns appropriate HTTP status codes:
+
+- `200 OK` - Successful request
+- `400 Bad Request` - Invalid input data
+- `503 Service Unavailable` - Model not loaded (train the model first)
+- `500 Internal Server Error` - Server error during prediction
+
+Example error handling:
+
+```python
+import requests
+
+try:
+    response = requests.post("http://localhost:8000/predict", json=data)
+    response.raise_for_status()  # Raises exception for bad status codes
+    result = response.json()
+except requests.exceptions.HTTPError as e:
+    print(f"HTTP Error: {e}")
+    print(f"Response: {response.json()}")
+except requests.exceptions.RequestException as e:
+    print(f"Request Error: {e}")
+```
+
+### API Response Format
+
+**Successful Prediction Response:**
+```json
+{
+    "prediction": "Demented",
+    "confidence": 0.85,
+    "probabilities": {
+        "Nondemented": 0.15,
+        "Demented": 0.85
+    }
+}
+```
+
+**Error Response:**
+```json
+{
+    "detail": "Model not loaded. Please train the model first."
+}
+```
+
+### Deployment
+
+For production deployment, consider:
+
+1. **Using a production ASGI server**: Use `uvicorn` with multiple workers or `gunicorn` with uvicorn workers
+2. **Adding authentication**: Implement API keys or OAuth2
+3. **Rate limiting**: Add rate limiting to prevent abuse
+4. **Logging**: Configure proper logging for monitoring
+5. **HTTPS**: Use HTTPS in production with SSL certificates
+
+Example production command:
+```bash
+uvicorn api:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info
 ```
 
 ## 🔌 MCP Server
 
-The project includes a Model Context Protocol (MCP) server for integration with AI assistants.
+The project includes a Model Context Protocol (MCP) server that exposes the model as tools for AI assistants and other MCP-compatible clients. This allows AI assistants like Claude, ChatGPT, or custom MCP clients to interact with your model.
+
+### What is MCP?
+
+Model Context Protocol (MCP) is a standardized protocol for AI assistants to interact with external tools and services. It enables AI assistants to:
+- Call your model for predictions
+- Get model information
+- Check model health status
+
+### Installation
+
+The MCP server requires the MCP SDK:
+
+```bash
+pip install mcp
+```
 
 ### Starting the MCP Server
+
+Start the MCP server:
 
 ```bash
 python mcp_server.py
 ```
 
+The server runs as a stdio-based server, communicating via standard input/output. It's designed to be used with MCP clients.
+
 ### MCP Tools
 
 The server exposes the following tools:
 
-- `predict` - Make a prediction using the model
-- `model_info` - Get information about the loaded model
-- `health_check` - Check if the model is loaded and ready
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `predict` | Make a prediction using the model | `input` (string): Input data as JSON string or file path |
+| `model_info` | Get information about the loaded model | None |
+| `health_check` | Check if the model is loaded and ready | None |
 
-### MCP Client Integration
-
-To use with an MCP client:
+### Using MCP with Python Client
 
 ```python
 from mcp import ClientSession, StdioServerParameters
 import asyncio
+import json
 
 async def main():
+    # Connect to MCP server
+    async with ClientSession(
+        StdioServerParameters(
+            command="python",
+            args=["mcp_server.py"],
+            env=None
+        )
+    ) as session:
+        # Initialize the session
+        await session.initialize()
+        
+        # List available tools
+        tools = await session.list_tools()
+        print("Available tools:", [tool.name for tool in tools])
+        
+        # Health check
+        health_result = await session.call_tool(
+            "health_check",
+            {}
+        )
+        print("Health:", health_result.content[0].text)
+        
+        # Get model info
+        model_info = await session.call_tool(
+            "model_info",
+            {}
+        )
+        print("Model Info:", model_info.content[0].text)
+        
+        # Make prediction
+        # For image-based models, provide base64 encoded image or file path
+        prediction_input = json.dumps({
+            "file_path": "test_image.jpg"
+        })
+        
+        prediction_result = await session.call_tool(
+            "predict",
+            {"input": prediction_input}
+        )
+        print("Prediction:", prediction_result.content[0].text)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Using MCP with Claude Desktop
+
+To use with Claude Desktop, add this to your MCP configuration file:
+
+```json
+{
+  "mcpServers": {
+    "alzhimer": {
+      "command": "python",
+      "args": ["/home/m-aljasem/projects/ai-projects/alzhimer/mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "/home/m-aljasem/projects/ai-projects/alzhimer"
+      }
+    }
+  }
+}
+```
+
+### MCP Tool Responses
+
+**Health Check Response:**
+```json
+{
+  "status": "healthy",
+  "model_loaded": true
+}
+```
+
+**Model Info Response:**
+```json
+{
+  "model_type": "TensorFlow/Keras",
+  "model_path": "models/model.h5",
+  "classes": ["Class1", "Class2"],
+  "description": "Model description"
+}
+```
+
+**Prediction Response:**
+```json
+{
+  "prediction": "Class1",
+  "confidence": 0.95,
+  "probabilities": {
+    "Class1": 0.95,
+    "Class2": 0.05
+  }
+}
+```
+
+### Error Handling
+
+The MCP server returns error messages in JSON format:
+
+```json
+{
+  "error": "Model not loaded. Please train the model first."
+}
+```
+
+### Integration Examples
+
+**Example 1: Batch Predictions**
+```python
+import asyncio
+from mcp import ClientSession, StdioServerParameters
+
+async def batch_predict(file_paths):
     async with ClientSession(
         StdioServerParameters(
             command="python",
             args=["mcp_server.py"]
         )
     ) as session:
-        # List tools
-        tools = await session.list_tools()
-        print(tools)
+        await session.initialize()
         
-        # Call tool
-        result = await session.call_tool(
-            "health_check",
-            {}
-        )
-        print(result)
+        results = []
+        for file_path in file_paths:
+            result = await session.call_tool(
+                "predict",
+                {"input": json.dumps({"file_path": file_path})}
+            )
+            results.append(json.loads(result.content[0].text))
+        
+        return results
 
-asyncio.run(main())
+# Usage
+predictions = asyncio.run(batch_predict([
+    "image1.jpg",
+    "image2.jpg",
+    "image3.jpg"
+]))
 ```
+
+**Example 2: Model Monitoring**
+```python
+import asyncio
+from mcp import ClientSession, StdioServerParameters
+import time
+
+async def monitor_model():
+    async with ClientSession(
+        StdioServerParameters(
+            command="python",
+            args=["mcp_server.py"]
+        )
+    ) as session:
+        await session.initialize()
+        
+        while True:
+            health = await session.call_tool("health_check", {})
+            print(f"[{time.strftime('%H:%M:%S')}] Health: {health.content[0].text}")
+            await asyncio.sleep(60)  # Check every minute
+
+# Run monitoring
+asyncio.run(monitor_model())
+```
+
+### Troubleshooting
+
+**Issue: MCP server not starting**
+- Ensure `mcp` package is installed: `pip install mcp`
+- Check that the model file exists in the `models/` directory
+- Verify Python path and dependencies
+
+**Issue: Tool calls failing**
+- Check that the model is trained and weights are saved
+- Verify input format matches expected format
+- Check server logs for detailed error messages
+
+**Issue: Connection errors**
+- Ensure the MCP server process is running
+- Check that stdio communication is working
+- Verify environment variables if needed
+
 
 ## 🤝 Contributing
 
