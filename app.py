@@ -12,6 +12,7 @@ import pickle
 import os
 from pathlib import Path
 import sys
+from src.explainability import ModelExplainer
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -92,6 +93,77 @@ def predict_alzheimers(model, features: dict, scaler) -> dict:
     }
 
 
+def explainability_page():
+    """Explainability interface for tabular data."""
+    st.header("🔍 Model Explainability")
+    st.markdown("Understand **why** the model makes its predictions using SHAP values.")
+    
+    import pickle
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import shap
+    
+    model_path = Path("models/best_model.pkl")
+    scaler_path = Path("models/scaler.pkl")
+    
+    if not model_path.exists():
+        st.warning("⚠️ No trained model found. Please train a model first.")
+        return
+    
+    try:
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
+        scaler = None
+        if scaler_path.exists():
+            with open(scaler_path, 'rb') as f:
+                scaler = pickle.load(f)
+        
+        st.success("✅ Model loaded!")
+        
+        st.subheader("📥 Input Features")
+        st.markdown("Enter feature values for explanation:")
+        
+        # Feature inputs (adjust based on your features)
+        col1, col2 = st.columns(2)
+        with col1:
+            feature1 = st.number_input("Feature 1", value=0.0)
+            feature2 = st.number_input("Feature 2", value=0.0)
+        with col2:
+            feature3 = st.number_input("Feature 3", value=0.0)
+            feature4 = st.number_input("Feature 4", value=0.0)
+        
+        instance = np.array([[feature1, feature2, feature3, feature4]])
+        
+        if scaler:
+            instance = scaler.transform(instance)
+        
+        if st.button("🔍 Explain"):
+            with st.spinner("Computing SHAP values..."):
+                try:
+                    # Create explainer
+                    explainer = ModelExplainer(model, instance, feature_names=None)
+                    shap_values = explainer.explain_instance(instance, plot=False)
+                    
+                    st.subheader("📊 SHAP Explanation")
+                    
+                    # Plot
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    shap.waterfall_plot(
+                        shap.Explanation(
+                            values=shap_values[0],
+                            base_values=0,
+                            data=instance[0]
+                        ),
+                        show=False
+                    )
+                    st.pyplot(fig)
+                    
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+    
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+
 def main():
     """Main application function."""
     
@@ -103,13 +175,16 @@ def main():
     st.sidebar.title("Navigation")
     app_mode = st.sidebar.selectbox(
         "Choose a mode",
-        ["Prediction", "Model Training", "About"]
+        ["Prediction", "Model Training", "Explainability", "About"]
     )
     
     if app_mode == "Prediction":
         prediction_page()
     elif app_mode == "Model Training":
         training_page()
+    
+    elif app_mode == "Explainability":
+        explainability_page()
     elif app_mode == "About":
         about_page()
 

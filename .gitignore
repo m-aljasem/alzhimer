@@ -73,3 +73,6 @@ Thumbs.db
 experiments/
 wandb/
 mlruns/
+# Original Kaggle notebook (keep local only)
+main.ipynb
+*.ipynb:Zone.Identifier

@@ -18,3 +18,7 @@ typing-extensions>=4.7.0
 
 
 kaggle>=1.5.0
+
+# Explainability packages
+shap>=0.42.0
+lime>=0.2.0.1
