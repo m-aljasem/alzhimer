@@ -299,6 +299,97 @@ python -c "from src.data_loader import DataLoader; print('DataLoader OK')"
 python -c "from src.models import ModelTrainer; print('ModelTrainer OK')"
 ```
 
+
+## 🌐 RESTful API
+
+The project includes a FastAPI server for programmatic access to the model.
+
+### Starting the API Server
+
+```bash
+python api.py
+# or
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
+```
+
+The API will be available at `http://localhost:8000`
+
+### API Endpoints
+
+- `GET /` - Root endpoint with API information
+- `GET /health` - Health check endpoint
+- `GET /model/info` - Get model information
+- `POST /predict` - Make a prediction
+
+### API Documentation
+
+Once the server is running, visit:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+### Example Usage
+
+```python
+import requests
+
+# Health check
+response = requests.get("http://localhost:8000/health")
+print(response.json())
+
+# Make prediction (example for image-based models)
+with open("test_image.jpg", "rb") as f:
+    files = {"file": f}
+    response = requests.post("http://localhost:8000/predict", files=files)
+    print(response.json())
+```
+
+## 🔌 MCP Server
+
+The project includes a Model Context Protocol (MCP) server for integration with AI assistants.
+
+### Starting the MCP Server
+
+```bash
+python mcp_server.py
+```
+
+### MCP Tools
+
+The server exposes the following tools:
+
+- `predict` - Make a prediction using the model
+- `model_info` - Get information about the loaded model
+- `health_check` - Check if the model is loaded and ready
+
+### MCP Client Integration
+
+To use with an MCP client:
+
+```python
+from mcp import ClientSession, StdioServerParameters
+import asyncio
+
+async def main():
+    async with ClientSession(
+        StdioServerParameters(
+            command="python",
+            args=["mcp_server.py"]
+        )
+    ) as session:
+        # List tools
+        tools = await session.list_tools()
+        print(tools)
+        
+        # Call tool
+        result = await session.call_tool(
+            "health_check",
+            {}
+        )
+        print(result)
+
+asyncio.run(main())
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. Areas for improvement:
