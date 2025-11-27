@@ -64,7 +64,7 @@ This project implements multiple machine learning models to predict Alzheimer's 
 
 ```bash
 git clone <repository-url>
-cd alzhimer
+cd neurocare-ai
 ```
 
 ### Step 2: Create Virtual Environment (Recommended)
@@ -217,7 +217,7 @@ features = {
 ## 📁 Project Structure
 
 ```
-alzhimer/
+neurocare-ai/
 ├── src/                      # Source code package
 │   ├── __init__.py          # Package initialization
 │   ├── data_loader.py       # Data loading and preprocessing

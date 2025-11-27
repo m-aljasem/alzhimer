@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="alzhimer",
+    name="neurocare-ai",
     version="1.0.0",
     author="Mohamad AlJasem, MD MPH MSc",
     author_email="mohamad@aljasem.eu.org",
     description="Early Alzheimer's Disease Detection using Machine Learning",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/m-aljasem/alzhimer",
+    url="https://github.com/m-aljasem/neurocare-ai",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
